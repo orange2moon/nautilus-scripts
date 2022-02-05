@@ -12,7 +12,7 @@ Various scripts for automating tasks in Linux. Not prepared for public use. Use 
 # Dependencies - Python
 
 1. PyPDF4
-2. wand
+2. Wand
 	
 # Install Dependencies
 
