@@ -1,0 +1,67 @@
+#!/bin/env python3
+
+from os import getenv, path, system, remove
+from datetime import datetime
+from wand.image import Image
+
+#globals
+
+now = datetime.now()
+## Handle Command Line Stuff
+
+inList = getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS',
+		'').splitlines()
+inList.sort()
+types = {	".jpeg": True,
+			".jpg": True, 	
+			".png": True,
+			".gif": True,
+			".heic": True,
+			".webp": True}
+files = []
+for f in inList:
+	if path.splitext(f)[1].lower() in types:
+		files.append(f)
+	else:
+		continue
+
+if len(files) < 1:
+	exit(0)
+			
+
+## Do the magic
+for f in files:
+
+#	with Image(filename=f) as img:
+#		pixelX, pixelY = img.size;
+#		bottomR = str(pixelX-1) + "," + str(pixelY-1)
+
+	inFile = "'" + f + "'"
+	outFile = path.dirname(f) + "/"
+	outFile = outFile + path.splitext(path.basename(f))[0].replace(" ","")
+	outFile = outFile + ".png"
+
+	if path.isfile(outFile):
+		outFile = path.splitext(outFile)[0] + now.strftime("%m-%d_%H-%M-%S.png")
+
+	masterMaskBefore = path.basename(path.splitext(f)[0]).replace(" ","") + now.strftime("a_%M-%S.gif")
+	masterMaskAfter = path.basename(path.splitext(f)[0]).replace(" ","") + now.strftime("z_%M-%S.gif")
+
+	cmd = "convert " + inFile
+	cmd = cmd + " \( -clone 0 -negate -threshold 3% -type bilevel +write " + masterMaskBefore 
+	cmd = cmd + " -define connected-components:area-threshold=30 -define connected-components:mean-color=true -connected-components 4 +write " + masterMaskAfter
+	cmd = cmd + " \) -alpha off -compose copy_opacity -composite " + outFile
+#	print(cmd)
+	system(cmd)
+	
+	remove(masterMaskBefore)
+	remove(masterMaskAfter)
+#	print("Finished")
+
+#	cmd = "convert " + inFile 
+#	cmd = cmd + " -fill none -fuzz 10% -draw 'matte " + bottomR
+#	cmd = cmd + " floodfill' -flop  -draw 'matte " + bottomR
+#	cmd = cmd + " floodfill' -flop "
+#	cmd = cmd + outFile
+#	system(cmd)
+

@@ -1,0 +1,38 @@
+#!/bin/env python3
+
+from os import getenv, path
+from datetime import datetime
+from PyPDF4 import PdfFileMerger, PdfFileReader
+
+
+## Handle Command Line Stuff
+
+inList = getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS',
+		'').splitlines()
+inList.sort()
+files = []
+for f in inList:
+	if path.splitext(f)[1].lower() == '.pdf':
+		files.append(f)
+	else:
+		continue
+
+if len(files) < 2:
+	exit(0)
+			
+now = datetime.now()
+output = path.splitext(files[0])[0]
+output = output + "_MERGED_" + now.strftime("%m-%d_%H-%M-%S.pdf")
+
+## Handle file merging
+
+with open(output, "wb") as out:
+		merger = PdfFileMerger(out)
+		for number in range(0, len(files)):
+				nextFile = open(files[number], "rb")
+				bm = path.splitext(files[number])[0]
+				bm = path.basename(bm)
+				merger.append(nextFile, bookmark=bm)
+		merger.write(out)
+		merger.close()
+

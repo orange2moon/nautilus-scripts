@@ -1,0 +1,38 @@
+#!/bin/env python3
+
+from os import getenv, path
+from datetime import datetime
+from wand.image import Image
+
+## Handle Command Line Stuff
+
+inList = getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS',
+		'').splitlines()
+inList.sort()
+types = {	".jpg": True, 
+			".png": True,
+			".jpeg": True,
+			".gif": True,
+			".heic": True,
+			".webp": True}
+files = []
+for f in inList:
+	if path.splitext(f)[1].lower() in types:
+		files.append(f)
+	else:
+		continue
+
+if len(files) < 1:
+	exit(0)
+			
+
+## Do the magic
+for f in files:
+	with Image(filename=f) as img:
+		with img.clone() as rotated:
+			rotated.rotate(90)
+			overWrite = open(f, "wb")
+			rotated.save(overWrite)
+			overWrite.close()
+				
+			

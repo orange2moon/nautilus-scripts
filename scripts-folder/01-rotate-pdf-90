@@ -1,0 +1,54 @@
+#!/bin/env python3
+
+from os import getenv, path
+from datetime import datetime
+from wand.image import Image
+import sys
+
+
+if sys.stdin.isatty():
+    print("running interactively")
+    inList = sys.argv.copy()
+else:
+    print("running non-interactively")
+    inList = getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS',
+        '').splitlines()
+
+
+inList.sort()
+types = {   ".pdf": True, 
+            ".jpg": True, 
+            ".png": True,
+            ".jpeg": True,
+            ".gif": True,
+            ".heic": True,
+            ".webp": True}
+files = []
+for f in inList:
+    if path.splitext(f)[1].lower() in types:
+        files.append(f)
+    else:
+        continue
+
+if len(files) < 1:
+    exit(0)
+            
+
+## Do the magic
+for f in files:
+    with Image(filename=f) as img:
+        length = len(img.sequence)
+        if length > 1:
+            with img.clone() as rotated:
+                for i in range(0,length):
+                    rotated.sequence[i].rotate(90)
+                overWrite = open(f, "wb")
+                rotated.save(overWrite)
+                overWrite.close()
+        else:
+            with img.clone() as rotated:
+                rotated.rotate(90)
+                overWrite = open(f, "wb")
+                rotated.save(overWrite)
+                overWrite.close()
+    
