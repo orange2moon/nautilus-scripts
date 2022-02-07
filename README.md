@@ -33,4 +33,6 @@ Make sure you compile and install the LADSPA plugins [noise-suppression-for-voic
 ## Finally install the scripts
 	make install
 	
-	
+## Usage
+From the nautilus file browser, right click a file and under the scripts folder select the appropriate script. 
+If "~/.local/bin" is in your "PATH" variable (for BASH), you can run the script "improve-audio.sh" from the command line. 
