@@ -17,7 +17,6 @@ function progress {
         size=$(expr $size - 10)
     else
         size=40
-	echo "Size is 40"
     fi
     p=$(expr $1 \* $size)
     p=$(expr $p / $2)
