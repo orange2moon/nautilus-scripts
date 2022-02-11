@@ -1,10 +1,31 @@
 #!/bin/bash
 
+function ptimes {
+    for i in $(seq 1 $2)
+    do
+         echo -n $1
+    done
+}
+
 function progress {
-        status=$(expr "$1")
-        finish="$2"
-        p=$(python3 -c "print(${status} / ${finish})")
-        python3 -c "print( '#' * int((${p} * 40.0)) + '_' * int(( (1.0 - ${p}) * 40.0)) + ' ' + str(int(${p} * 100)) + '%  \r', end='')"
+    size=$(tput cols 2>/dev/null)
+    if [ -z ${size+x} ]; then
+	   return 0
+    fi
+
+    if [ $size -gt 14 ]; then
+        size=$(expr $size - 10)
+    else
+        size=40
+	echo "Size is 40"
+    fi
+    p=$(expr $1 \* $size)
+    p=$(expr $p / $2)
+    e=$(expr $size - $p)
+    ptimes "#" $p
+    ptimes "_" $e
+    echo -n -e " [$p %]\r"
+    
 }
 
 Max_Threads=`getconf _NPROCESSORS_ONLN`
@@ -15,7 +36,6 @@ IFS=$'\n'
 
 myArray=( "$@" )
 total=`expr ${#myArray[@]} - 1`
-#echo "TOTAL $total"; exit 0
 c="0"
 
 while [ $c -lt "$total" ]
@@ -49,7 +69,7 @@ do
 
 done
 progress $total $total
-
+echo " "
 IFS=$IF
 
 
