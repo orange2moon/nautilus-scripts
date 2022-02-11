@@ -18,10 +18,12 @@ function progress {
     else
         size=40
     fi
-    p=$(expr $1 \* $size)
+    n=$(expr $1 \* $size)
+    n=$(expr $n / $2)
+    e=$(expr $size - $n)
+    p=$(expr $1 \* 100)
     p=$(expr $p / $2)
-    e=$(expr $size - $p)
-    ptimes "#" $p
+    ptimes "#" $n
     ptimes "_" $e
     echo -n -e " [$p %]\r"
     
@@ -35,6 +37,7 @@ IFS=$'\n'
 
 myArray=( "$@" )
 total=`expr ${#myArray[@]} - 1`
+#echo "TOTAL $total"; exit 0
 c="0"
 
 while [ $c -lt "$total" ]
@@ -68,7 +71,7 @@ do
 
 done
 progress $total $total
-echo " "
+echo ""
 IFS=$IF
 
 
