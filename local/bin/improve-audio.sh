@@ -1,19 +1,17 @@
 #!/bin/bash
 
 # important default values you must set
-EQFILE="/home/justin/.config/plugins/4scripts/clean01.cfg"
+EQFILE=$(echo ${HOME}/.local/share/plugins/settings/clean01-x16mono-para-eq.cfg)
 LSP_PLUGIN_FILE="/usr/local/lib/ladspa/lsp-plugins-ladspa.so"
-
-
-# This is not really used 
-# since the name is read from the config file
-DEFAULT_PLUGIN_NAME="http://lsp-plug.in/plugins/ladspa/para_equalizer_x16_mono"
-
 
 # other settings
 NORM_LEVEL="-18"
 CONFIG_PARSER="lsp-cfg2dic.py"
 RNOISE_LEVEL="20.0"
+
+# This is not really used 
+# since the name is read from the config file
+DEFAULT_PLUGIN_NAME="http://lsp-plug.in/plugins/ladspa/para_equalizer_x16_mono"
 
 
 # variables you really don't need to mess with
@@ -70,11 +68,13 @@ function usage {
 		If the output file already exists, the program will exit.
 	-n -29 to -10
 		Set the level, in LUFS, to adjust the audio volume to.
+	-y
+		overwrite the input file (do an in place edit).
 EOF
 	exit 1
 }
 
-while getopts :i:r:e:o:n: flag
+while getopts :i:r:e:o:n:y flag
 do
         case "${flag}" in
 		n)
@@ -142,6 +142,9 @@ do
 				exit 1
 			fi
                 	;;
+		y)
+			OVERWRITE="true"
+			;;
                 ?)
                         echo "Invalid option -${OPTARG}."
                         usage
@@ -213,6 +216,13 @@ function getInFileName {
 	echo "$inf"
 }
 
+function removeOutFile {
+	second2Last=$(expr ${#prepFiles[@]} - 1)
+	if [ $second2Last -gt -1 ]; then
+		prepFiles=( "${prepFiles[@]:0:$second2Last}" )
+	fi
+}
+
 function videoOrAudio {
 	OIFS="$IFS"
 	IFS=$'\n'
@@ -278,7 +288,13 @@ function convertAudio {
 	randGen=$(echo $RANDOM | md5sum | head -c 10 )
 	out="${workDir}_${randGen}_${audioFormat}"
 	prepFiles+=("$out")
-	ffmpeg -hide_banner -loglevel error -i "$in" -c:a $sampleFormat "$out"
+	if [ $debug == "true" ]; then
+		ffmpeg -hide_banner -i "$in" -c:a $sampleFormat "$out"
+		ls -alF $out
+	else
+		ffmpeg -hide_banner -loglevel error -i "$in" -c:a $sampleFormat "$out"
+	
+	fi
 	IFS="$OIFS"
 }
 
@@ -334,11 +350,11 @@ function applyEQ {
 
 
 	if [ $debug = "true" ]; then
-		echo ffmpeg -v error -y -i "$in" -filter "[0:0]ladspa=file=${lspPlugins}:\'${pluginName}\':controls=${filterControls}" "${out}"
+		ffmpeg -y -i "$in" -filter "[0:0]ladspa=file=${lspPlugins}:\'${pluginName}\':controls=${filterControls}" "${out}"
+		ls -alF $out
+	else
+		ffmpeg -v error -y -i "$in" -filter "[0:0]ladspa=file=${lspPlugins}:\'${pluginName}\':controls=${filterControls}" "${out}"
 	fi
-
-	ffmpeg -v error -y -i "$in" -filter "[0:0]ladspa=file=${lspPlugins}:\'${pluginName}\':controls=${filterControls}" "${out}"
-
 	IFS="$OIFS"
 
 
@@ -353,13 +369,20 @@ function rnnoise {
 	out="${workDir}_${randGen}_${audioFormat}"
 	prepFiles+=("$out")
 
-pluginFile="/usr/local/lib64/ladspa/librnnoise_ladspa.so"
-pluginName="noise_suppressor_mono"
-filterControls="20.0"
+	pluginFile="/usr/local/lib64/ladspa/librnnoise_ladspa.so"
+	pluginName="noise_suppressor_mono"
+	filterControls="20.0"
+        OIFS="$IFS"
+        IFS=$'\n'
 
-ffmpeg -v error -y -i "$in" -filter "[0:0]ladspa=file=${pluginFile}:\'${pluginName}\':${filterControls}" "${out}"
-
-
+	if [ $debug = "true" ]; then
+		ls -alF $
+		ffmpeg -y -i "$in" -filter "[0:0]ladspa=file=${pluginFile}:\'${pluginName}\':${filterControls}" "${out}"
+		ls -alF $out
+	else
+		ffmpeg -v error -y -i "$in" -filter "[0:0]ladspa=file=${pluginFile}:\'${pluginName}\':${filterControls}" "${out}"
+	fi
+	IFS="$OIFS"
 }
 
 function isEmpty {
@@ -414,8 +437,10 @@ function norm {
 	target_i=$NORM_LEVEL
 	target_lra="7.0"
 	target_tp="-2.0"
+        
+	OIFS="$IFS"
+        IFS=$'\n'
 
-	emptyCommand="ffmpeg -v error -i "$in" -ar 48000 $out"
 	threshold=$(printf '%.0f' "$input_thresh")
 
 	if [ "$debug" = "true" ]; then
@@ -424,25 +449,34 @@ function norm {
 		echo "True peak: ${input_tp}"
 		echo "Loudness Range Target: ${input_lra}"
 		echo "Threshold: ${input_thresh}"
-		echo $emptyCommand
 		echo $threshold
-		echo $STATS     
-	        #echo "ffmpeg -i $in -filter:a loudnorm=linear=true:i=${target_i}:lra=${target_lra}:tp=${target_tp}:offset=0.0:measured_I=${input_i}:measured_tp=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh} -ar 48000 -c:a $sampleFormat $out"
+		echo $STATS
+		echo ===IN_FILE===
+		ls -alF $in
+		echo ===OUT_FILE===
+		ls -alF $out
 	fi
-
 
 	if [ "${input_i}" = "-inf" ]; then
-		$emptyCommand
+		removeOutFile
 	elif [ "${input_tp}" = "-inf" ]; then
-		$emptyCommand
+		removeOutFile
 	elif [ "${input_lra}" = "0.00" ]; then
-		"$emptyCommand"
+		removeOutFile
 	elif [ $threshold -gt "60" ]; then
-		$emptyCommand
+		removeOutFile
 	else
-		ffmpeg -y -v error -i "$in" -filter:a loudnorm=linear=true:i=${target_i}:lra=${target_lra}:tp=${target_tp}:offset=0.0:measured_I=${input_i}:measured_tp=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh} -ar 48000 -c:a "$sampleFormat" "$out"
+		if [ $debug == "true" ]; then
+			echo "NORMALIZING_AUDIO"
+			ffmpeg -y -i $in -filter:a loudnorm=linear=true:i=${target_i}:lra=${target_lra}:tp=${target_tp}:offset=0.0:measured_I=${input_i}:measured_tp=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh} -ar 48000 -c:a "$sampleFormat" "$out"
+			ls -alF $out
+		else
+			ffmpeg -y -v error -i $in -filter:a loudnorm=linear=true:i=${target_i}:lra=${target_lra}:tp=${target_tp}:offset=0.0:measured_I=${input_i}:measured_tp=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh} -ar 48000 -c:a "$sampleFormat" "$out"
+
+		fi
 	fi
 
+	IFS="$OIFS"
 }
 
 
@@ -458,6 +492,9 @@ elif [ $fileType = "1" ]; then
 	cleanUp
 elif [ $fileType = "2" ]; then
 	# file is audio only
+	if [ $debug == "true" ]; then
+		echo "audio file type"
+	fi
 	convertAudio && applyEQ && norm && rnnoise && copyFile
 	cleanUp
 else
