@@ -26,7 +26,7 @@ audioFormat='.wav'
 sampleFormat='pcm_f32le'
 STATS="empty"
 
-debug="false" #true or false
+debug="true" #true or false
 
 
 
@@ -131,11 +131,6 @@ do
 			;;
 		o)
 			OUTFILE=${OPTARG}
-			if [ -f $OUTFILE ]; then
-				echo "Outfile exists, exiting..."
-				usage
-				exit 1
-			fi
 			if ! [ -d $(dirname $OUTFILE) ]; then
 				echo "Outfile directory does not exist, exiting..."
 				usage
@@ -152,6 +147,17 @@ do
                         ;;
         esac
 done
+
+if [ $debug = "true" ]; then
+	test ! -z ${OVERWRITE+z} && echo "WILL overright the source file"
+fi
+
+if [ -z ${OVERWRITE+z} ]; then
+	if [ -f $OUTFILE ]; then
+		echo "Outfile exists, exiting..."
+		exit 1
+	fi
+fi
 
 if [ -z "$INFILE" ]; then
 	cat <<- EOF
@@ -197,10 +203,14 @@ else
 	fi
 fi
 
-if [[ -f "$lastOutFileName" ]]; then
-	echo "WILL NOT CLEAN THE AUDIO, THE DESTINATION FILE ALREADY EXITS:"
-	echo "$lastOutFileName"
-	exit 1
+if [ -z ${OVERWRITE+z} ]; then
+	if [[ -f "$lastOutFileName" ]]; then
+		echo "THE DESTINATION FILE ALREADY EXITS. Exiting:"
+		echo "$lastOutFileName"
+		exit 1
+	fi
+elif [ -z ${OUTFILE+z} ]; then
+      lastOutFileName="$firstInFileName"
 fi
 
 prepFiles=()
@@ -258,15 +268,39 @@ function mergeAudio {
 	OIFS="$IFS"
 	IFS=$'\n'
 	in=$(getInFileName)
-	ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 "$lastOutFileName"
+	if [ ! -z $OVERWRITE+z} ]; then
+		randGen=$(echo $RANDOM | md5sum | head -c 10 )
+		out="${workDir}_${randGen}_${audioFormat}"
+		prepFiles+=("$out")
+		
+		ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 "$out"
+	
+		in=$(getInFileName)
+		if [ -f "$lastOutFileName" ]; then
+			rm "$lastOutFileName"
+		fi
+		cp $in "$lastOutFileName"
+	else
+		ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 "$lastOutFileName"
+	fi
 	IFS="$OIFS"
 }
 
 function copyFile {
 	OIFS="$IFS"
 	IFS=$'\n'
+	
 	in=$(getInFileName)
-	cp "$in" "$lastOutFileName"
+
+	if [ ! -z ${OVERWRITE+z} ]; then
+		if [ -f $lastOutFileName ]; then
+			rm $lastOutFileName
+		fi
+		cp "$in" "$lastOutFileName"
+	else
+		cp "$in" "$lastOutFileName"
+	fi
+
 	IFS="$OIFS"
 }
 
