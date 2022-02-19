@@ -64,6 +64,8 @@ for f in files:
         if path.isfile(outFile):
             outFile = path.splitext(outFile)[0] + now.strftime("%m-%d_%H-%M-%S.png")
 
+        outFile = "'" + outFile + "'"
+        
         masterMaskBefore = workDir + "/before_" + now.strftime("a_%M-%S.gif")
         masterMaskAfter = workDir + "/after_" + now.strftime("z_%M-%S.gif")
 
