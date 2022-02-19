@@ -153,9 +153,11 @@ if [ $debug = "true" ]; then
 fi
 
 if [ -z ${OVERWRITE+z} ]; then
-	if [ -f $OUTFILE ]; then
-		echo "Outfile exists, exiting..."
-		exit 1
+	if [ ! -z ${OUTFILE+x} ]; then
+		if [ -f $OUTFILE ]; then
+			echo "Outfile exists, exiting..."
+			exit 1
+		fi
 	fi
 fi
 
@@ -264,25 +266,59 @@ function cleanUp {
 	rmdir $workDir
 }
 
+
 function mergeAudio {
 	OIFS="$IFS"
 	IFS=$'\n'
 	in=$(getInFileName)
-	if [ ! -z $OVERWRITE+z} ]; then
-		randGen=$(echo $RANDOM | md5sum | head -c 10 )
-		out="${workDir}_${randGen}_${audioFormat}"
-		prepFiles+=("$out")
-		
-		ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 "$out"
 	
-		in=$(getInFileName)
-		if [ -f "$lastOutFileName" ]; then
-			rm "$lastOutFileName"
-		fi
-		cp $in "$lastOutFileName"
-	else
-		ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 "$lastOutFileName"
+	aOptions="-c:v copy -ac 1 -c:a aac -map 0:v:0 -map 1:a:0"
+
+	vFormat=$(basename -- "$firstInFileName" | sed -e 's/.*\.//')
+
+	if [ $debug == "true" ]; then
+		echo "=====================-\|/-========"
+		echo "$firstInFileName"
+		echo "file extension ${vFormat}"
 	fi
+
+
+	if [ ! -z ${OVERWRITE+z} ]; then
+		randGen=$(echo $RANDOM | md5sum | head -c 10 )
+		out="${workDir}${randGen}.${vFormat}"
+		prepFiles+=("$out")
+	
+		if [ $debug == "true" ]; then
+			echo "OUTFILE $out"
+			echo ffmpeg -hide_banner -i "$firstInFileName" -i "$in" $aOptions "$out"
+			ffmpeg -hide_banner -i "$firstInFileName" -i "$in" $aOptions "$out"
+			re="$?"
+		else
+			ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" ${aOptions} "$out"
+			re="$?"
+		fi
+
+		echo "FFMPEG RESULT ${re}"
+
+		if [ $re -lt 1 ]; then
+			in=$(getInFileName)
+			if [ -f "$lastOutFileName" ]; then
+				rm "$lastOutFileName"
+			fi
+			cp $in "$lastOutFileName"
+		fi
+
+
+	else
+		if [ $debug == "true" ]; then
+			ffmpeg -hide_banner -i "$firstInFileName" -i "$in" ${aOptions} "$lastOutFileName"
+		else
+			ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" ${aOptions} "$lastOutFileName"
+		
+		fi
+	fi
+
+
 	IFS="$OIFS"
 }
 
