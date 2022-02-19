@@ -15,7 +15,7 @@ DEFAULT_PLUGIN_NAME="http://lsp-plug.in/plugins/ladspa/para_equalizer_x16_mono"
 
 
 # variables you really don't need to mess with
-workDir="$(mktemp -d -t audio_cleaner.XXXXXXX)/"
+workDir="$(mktemp -d -t audio_cleaner_XXXXXXX)/"
 
 # These two variables effect the way audio should be 
 # handled internally before the final output.
@@ -272,15 +272,7 @@ function mergeAudio {
 	IFS=$'\n'
 	in=$(getInFileName)
 	
-	aOptions="-c:v copy -ac 1 -c:a aac -map 0:v:0 -map 1:a:0"
-
 	vFormat=$(basename -- "$firstInFileName" | sed -e 's/.*\.//')
-
-	if [ $debug == "true" ]; then
-		echo "=====================-\|/-========"
-		echo "$firstInFileName"
-		echo "file extension ${vFormat}"
-	fi
 
 
 	if [ ! -z ${OVERWRITE+z} ]; then
@@ -289,16 +281,12 @@ function mergeAudio {
 		prepFiles+=("$out")
 	
 		if [ $debug == "true" ]; then
-			echo "OUTFILE $out"
-			echo ffmpeg -hide_banner -i "$firstInFileName" -i "$in" $aOptions "$out"
-			ffmpeg -hide_banner -i "$firstInFileName" -i "$in" $aOptions "$out"
+			ffmpeg -hide_banner -i "$firstInFileName" -i "$in" -c:v copy -ac 1 -c:a aac -map 0:v:0 -map 1:a:0 "$out"
 			re="$?"
 		else
-			ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" ${aOptions} "$out"
+			ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" -c:v copy -ac 1 -c:a aac -map 0:v:0 -map 1:a:0 "$out"
 			re="$?"
 		fi
-
-		echo "FFMPEG RESULT ${re}"
 
 		if [ $re -lt 1 ]; then
 			in=$(getInFileName)
@@ -311,9 +299,9 @@ function mergeAudio {
 
 	else
 		if [ $debug == "true" ]; then
-			ffmpeg -hide_banner -i "$firstInFileName" -i "$in" ${aOptions} "$lastOutFileName"
+			ffmpeg -hide_banner -i "$firstInFileName" -i "$in" -c:v copy -ac 1 -c:a aac -map 0:v:0 -map 1:a:0 "$lastOutFileName"
 		else
-			ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" ${aOptions} "$lastOutFileName"
+			ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" -c:v copy -ac 1 -c:a aac -map 0:v:0 -map 1:a:0 "$lastOutFileName"
 		
 		fi
 	fi
