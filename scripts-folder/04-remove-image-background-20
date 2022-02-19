@@ -6,7 +6,7 @@ from wand.image import Image
 import sys
 import tempfile
 
-threshold = "1%"
+threshold = "20%"
 
 debug = False
 

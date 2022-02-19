@@ -6,6 +6,8 @@ from wand.image import Image
 import sys
 import tempfile
 
+threshold = "3%"
+
 debug = False
 
 types = {	".jpeg": True,
@@ -70,7 +72,7 @@ for f in files:
         masterMaskAfter = workDir + "/after_" + now.strftime("z_%M-%S.gif")
 
         cmd = "convert " + inFile
-        cmd = cmd + " \( -clone 0 -negate -threshold 3% -type bilevel +write " + masterMaskBefore 
+        cmd = cmd + " \( -clone 0 -negate -threshold " + threshold + " -type bilevel +write " + masterMaskBefore 
         cmd = cmd + " -define connected-components:area-threshold=30 -define connected-components:mean-color=true -connected-components 4 +write " + masterMaskAfter
         cmd = cmd + " \) -alpha off -compose copy_opacity -composite " + outFile
         
