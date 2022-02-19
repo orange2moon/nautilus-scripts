@@ -26,7 +26,7 @@ audioFormat='.wav'
 sampleFormat='pcm_f32le'
 STATS="empty"
 
-debug="true" #true or false
+debug="false" #true or false
 
 
 
@@ -300,14 +300,17 @@ function mergeAudio {
 	else
 		if [ $debug == "true" ]; then
 			ffmpeg -hide_banner -i "$firstInFileName" -i "$in" -c:v copy -ac 1 -c:a aac -map 0:v:0 -map 1:a:0 "$lastOutFileName"
+			re="$?"
 		else
 			ffmpeg -hide_banner -loglevel error -i "$firstInFileName" -i "$in" -c:v copy -ac 1 -c:a aac -map 0:v:0 -map 1:a:0 "$lastOutFileName"
+			re="$?"
 		
 		fi
 	fi
 
 
 	IFS="$OIFS"
+	return $re
 }
 
 function copyFile {
@@ -317,10 +320,10 @@ function copyFile {
 	in=$(getInFileName)
 
 	if [ ! -z ${OVERWRITE+z} ]; then
-		if [ -f $lastOutFileName ]; then
-			rm $lastOutFileName
+		if [ -f "$in" ]; then
+			test -f $lastOutFileName && rm $lastOutFileName
+			cp "$in" "$lastOutFileName"
 		fi
-		cp "$in" "$lastOutFileName"
 	else
 		cp "$in" "$lastOutFileName"
 	fi
@@ -335,8 +338,16 @@ function extractAudio {
 	randGen=$(echo $RANDOM | md5sum | head -c 10 )
 	out="${workDir}_${randGen}_${audioFormat}"
 	prepFiles+=("$out")
-	ffmpeg -hide_banner -loglevel error -i "$in" -vn -c:a $sampleFormat "$out"
+	if [ $debug == "true" ]; then
+		ffmpeg -hide_banner -i "$in" -vn -c:a $sampleFormat "$out"
+		re="$?"
+	else
+		ffmpeg -hide_banner -loglevel error -i "$in" -vn -c:a $sampleFormat "$out"
+		re="$?"
+
+	fi
 	IFS="$OIFS"
+	return $re
 }
 
 function convertAudio {
@@ -348,12 +359,15 @@ function convertAudio {
 	prepFiles+=("$out")
 	if [ $debug == "true" ]; then
 		ffmpeg -hide_banner -i "$in" -c:a $sampleFormat "$out"
+		re="$?"
 		ls -alF $out
 	else
 		ffmpeg -hide_banner -loglevel error -i "$in" -c:a $sampleFormat "$out"
+		re="$?"
 	
 	fi
 	IFS="$OIFS"
+	return $re
 }
 
 function applyEQ {
@@ -409,12 +423,14 @@ function applyEQ {
 
 	if [ $debug = "true" ]; then
 		ffmpeg -y -i "$in" -filter "[0:0]ladspa=file=${lspPlugins}:\'${pluginName}\':controls=${filterControls}" "${out}"
+		re="$?"
 		ls -alF $out
 	else
 		ffmpeg -v error -y -i "$in" -filter "[0:0]ladspa=file=${lspPlugins}:\'${pluginName}\':controls=${filterControls}" "${out}"
+		re="$?"
 	fi
 	IFS="$OIFS"
-
+	return $re
 
 }
 
@@ -436,11 +452,14 @@ function rnnoise {
 	if [ $debug = "true" ]; then
 		ls -alF $
 		ffmpeg -y -i "$in" -filter "[0:0]ladspa=file=${pluginFile}:\'${pluginName}\':${filterControls}" "${out}"
+		re="$?"
 		ls -alF $out
 	else
 		ffmpeg -v error -y -i "$in" -filter "[0:0]ladspa=file=${pluginFile}:\'${pluginName}\':${filterControls}" "${out}"
+		re="$?"
 	fi
 	IFS="$OIFS"
+	return $re
 }
 
 function isEmpty {
@@ -475,7 +494,7 @@ function norm {
 	if [ $NORM_LEVEL = "off" ]; then
 		return
 	fi
-
+	re="1"
 	in="$(getInFileName)"
 	randGen=$(echo $RANDOM | md5sum | head -c 10 )
 	out="${workDir}_${randGen}_${audioFormat}"
@@ -516,25 +535,28 @@ function norm {
 	fi
 
 	if [ "${input_i}" = "-inf" ]; then
-		removeOutFile
+		removeOutFile && re=0
 	elif [ "${input_tp}" = "-inf" ]; then
-		removeOutFile
+		removeOutFile && re=0
 	elif [ "${input_lra}" = "0.00" ]; then
-		removeOutFile
+		removeOutFile && re=0
 	elif [ $threshold -gt "60" ]; then
-		removeOutFile
+		removeOutFile && re=0
 	else
 		if [ $debug == "true" ]; then
 			echo "NORMALIZING_AUDIO"
 			ffmpeg -y -i $in -filter:a loudnorm=linear=true:i=${target_i}:lra=${target_lra}:tp=${target_tp}:offset=0.0:measured_I=${input_i}:measured_tp=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh} -ar 48000 -c:a "$sampleFormat" "$out"
+			re="$?"
 			ls -alF $out
 		else
 			ffmpeg -y -v error -i $in -filter:a loudnorm=linear=true:i=${target_i}:lra=${target_lra}:tp=${target_tp}:offset=0.0:measured_I=${input_i}:measured_tp=${input_tp}:measured_LRA=${input_lra}:measured_thresh=${input_thresh} -ar 48000 -c:a "$sampleFormat" "$out"
+			re="$?"
 
 		fi
 	fi
 
 	IFS="$OIFS"
+	return $re
 }
 
 
