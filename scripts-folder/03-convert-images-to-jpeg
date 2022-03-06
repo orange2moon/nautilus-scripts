@@ -3,11 +3,29 @@
 from os import getenv, path
 from datetime import datetime
 from wand.image import Image
+import sys
 
 ## Handle Command Line Stuff
+debug = False
 
-inList = getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS',
-		'').splitlines()
+inList = []
+nautilusList = getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS','').splitlines()
+if len(nautilusList) > 0 :
+    if debug:
+        print("Nautilus mode")
+        print(len(nautilusList))
+
+    inList = nautilusList[0:]
+
+elif len(sys.argv) > 1:
+    if debug:
+        print("command line")
+    inList = sys.argv[1:]
+
+else:
+    print("no files given, exiting...")
+    exit(0)
+
 inList.sort()
 types = { 	".svg": True,
             ".png": True,
