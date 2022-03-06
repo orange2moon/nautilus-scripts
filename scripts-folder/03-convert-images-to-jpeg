@@ -9,7 +9,8 @@ from wand.image import Image
 inList = getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS',
 		'').splitlines()
 inList.sort()
-types = { 	".png": True,
+types = { 	".svg": True,
+            ".png": True,
 			".gif": True,
 			".heic": True,
 			".webp": True}
