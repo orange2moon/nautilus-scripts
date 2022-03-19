@@ -1,6 +1,6 @@
 # Purpose
 
-Various scripts for automating tasks in Linux. Not prepared for public use. Use at own risk. This code is prepared for friends to use. If you figure out how to use it you automatically qualify as a friend.
+Various scripts for automating tasks in Linux. Not prepared for public use. Use at your own risk. This code is prepared for friends to use. If you figure out how to use it you automatically qualify as a friend.
 	
 # Dependencies - Regular
 
