@@ -4,11 +4,11 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-PREFIX = str(Path.home()) + "/.local"
+PREFIX = os.path.join(Path.home(), ".local")
 
 debug = False
 
-improveAudioScript = PREFIX + "/bin/improve-audio.sh -i"
+improveAudioScript = os.path.join(PREFIX, "bin", "improve-audio.sh -i")
 
 def getType(f):
     # return 1 for mono
