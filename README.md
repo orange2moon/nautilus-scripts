@@ -1,3 +1,5 @@
+![" "](https://github.com/orang2moon/nautilus-scripts/images_example.gif)
+
 ## Purpose
 
 Various scripts for automating tasks in nautilus (The GNOME file manager). It's in Alpha stage right now and might not work for you. Use at your own risk.
