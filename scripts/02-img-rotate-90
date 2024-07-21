@@ -14,7 +14,7 @@ else:
 inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
 inList.sort()
 files = []
-allowed_extensions = [".png", ".jpg", ".jpeg", ".gif", ".heic", ".webp", ".pdf"]
+allowed_extensions = [".png", ".jpg", ".jpeg", ".gif", ".heic", ".webp"]
 for f in inList:
     try:
         if path.splitext(f)[1].lower() in allowed_extensions:
