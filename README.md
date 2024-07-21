@@ -8,18 +8,18 @@ __v0.1.0__
 
 ## To Do
 
-[] Improve the rotation of pdf (right now the resolution is really low).
-[] Make the code a little cleaner and standard across each script.
-[] Multi-threaded image rotation.
-[] Make unit-tests.
-[] __Test the audio scripts (they probably aren't working)__.
-[] Test on ubuntu (especially the heic format)
-[] Be more specific about image formats, allowing all formats supported by the system.
+[] Improve the rotation of pdf (right now the resolution is really low).  
+[] Make the code a little cleaner and standard across each script.  
+[] Multi-threaded image rotation.  
+[] Make unit-tests.  
+[] __Test the audio scripts (they probably aren't working)__.  
+[] Test on ubuntu (especially the heic format)  
+[] Be more specific about image formats, allowing all formats supported by the system.  
 
 ## Done
 
-[x] Separate the installation of the audio and image scripts.
-[x] Fix the rotation to actually rotate multi-page pdfs and GIFs.
+[x] Separate the installation of the audio and image scripts.  
+[x] Fix the rotation to actually rotate multi-page pdfs and GIFs.  
 
 ## Dependencies
 
