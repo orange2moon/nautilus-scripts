@@ -1,0 +1,50 @@
+#!/bin/env python3
+
+from os import getenv, path
+from wand.image import Image
+import sys
+
+if sys.stdin.isatty():
+    inList = sys.argv[1:].copy()
+else:
+    # Running from nautilus
+    inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
+
+inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
+inList.sort()
+files = []
+allowed_extensions = [
+    ".svg",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".heic",
+    ".webp",
+    ".pdf",
+]
+for f in inList:
+    try:
+        if path.splitext(f)[1].lower() in allowed_extensions:
+            files.append(f)
+        else:
+            continue
+
+    except IndexError:
+        continue
+
+if len(files) < 1:
+    print(
+        f"No files given. this script only allows files of types: {', '.join(allowed_extensions)}"
+    )
+    exit(0)
+
+## Do the magic
+for f in files:
+    outFile = path.splitext(f)[0] + ".jpg"
+    with Image(filename=f) as img:
+        with img.clone() as converted:
+            converted.format = "jpg"
+            overWrite = open(outFile, "wb")
+            converted.save(overWrite)
+            overWrite.close()

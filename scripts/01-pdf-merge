@@ -1,0 +1,48 @@
+#!/bin/env python3
+
+from os import getenv, path
+from datetime import datetime
+from PyPDF4 import PdfFileMerger
+import sys
+
+if sys.stdin.isatty():
+    inList = sys.argv[1:].copy()
+else:
+    # Running from nautilus
+    inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
+
+inList.sort()
+files = []
+allowed_extensions = [".pdf"]
+for f in inList:
+    try:
+        if path.splitext(f)[1].lower() in allowed_extensions:
+            files.append(f)
+        else:
+            continue
+
+    except IndexError:
+        continue
+
+if len(files) < 1:
+    print(
+        f"No files given. this script only allows files of types: {', '.join(allowed_extensions)}"
+    )
+    exit(0)
+
+
+now = datetime.now()
+output = path.splitext(files[0])[0]
+output = output + "_MERGED_" + now.strftime("%m-%d_%H-%M-%S.pdf")
+
+## Handle file merging
+
+with open(output, "wb") as out:
+    merger = PdfFileMerger(out)
+    for number in range(0, len(files)):
+        nextFile = open(files[number], "rb")
+        bm = path.splitext(files[number])[0]
+        bm = path.basename(bm)
+        merger.append(nextFile, bookmark=bm)
+    merger.write(out)
+    merger.close()

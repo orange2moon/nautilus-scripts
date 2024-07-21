@@ -1,38 +1,35 @@
 #!/bin/env python3
 
 from os import getenv, path
-from datetime import datetime
 from wand.image import Image
 import sys
 
 
 if sys.stdin.isatty():
-    print("running interactively")
-    inList = sys.argv.copy()
+    inList = sys.argv[1:].copy()
 else:
-    print("running non-interactively")
-    inList = getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS',
-        '').splitlines()
+    # Running from nautilus
+    inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
 
-
+inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
 inList.sort()
-types = {   ".pdf": True, 
-            ".jpg": True, 
-            ".png": True,
-            ".jpeg": True,
-            ".gif": True,
-            ".heic": True,
-            ".webp": True}
 files = []
+allowed_extensions = [".png", ".jpg", ".jpeg", ".gif", ".heic", ".webp", ".pdf"]
 for f in inList:
-    if path.splitext(f)[1].lower() in types:
-        files.append(f)
-    else:
+    try:
+        if path.splitext(f)[1].lower() in allowed_extensions:
+            files.append(f)
+        else:
+            continue
+
+    except IndexError:
         continue
 
 if len(files) < 1:
+    print(
+        f"No files given. this script only allows files of types: {', '.join(allowed_extensions)}"
+    )
     exit(0)
-            
 
 ## Do the magic
 for f in files:
@@ -40,7 +37,7 @@ for f in files:
         length = len(img.sequence)
         if length > 1:
             with img.clone() as rotated:
-                for i in range(0,length):
+                for i in range(0, length):
                     rotated.sequence[i].rotate(90)
                 overWrite = open(f, "wb")
                 rotated.save(overWrite)
@@ -51,4 +48,3 @@ for f in files:
                 overWrite = open(f, "wb")
                 rotated.save(overWrite)
                 overWrite.close()
-    

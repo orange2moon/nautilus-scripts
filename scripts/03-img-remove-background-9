@@ -1,0 +1,75 @@
+#!/bin/env python3
+
+from os import getenv, path, system
+from datetime import datetime
+import sys
+import tempfile
+
+
+threshold = "9%"
+now = datetime.now()
+
+if sys.stdin.isatty():
+    inList = sys.argv[1:].copy()
+else:
+    # Running from nautilus
+    inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
+
+inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
+inList.sort()
+files = []
+allowed_extensions = [".png", ".jpg", ".jpeg", ".gif", ".heic", ".webp"]
+for f in inList:
+    try:
+        if path.splitext(f)[1].lower() in allowed_extensions:
+            files.append(f)
+        else:
+            continue
+
+    except IndexError:
+        continue
+
+if len(files) < 1:
+    print(
+        f"No files given. this script only allows files of types: {', '.join(allowed_extensions)}"
+    )
+    exit(0)
+
+for f in files:
+    with tempfile.TemporaryDirectory(
+        suffix=None, prefix=None, dir=None, ignore_cleanup_errors=False
+    ) as workDir:
+        inFile = "'" + f + "'"
+        outFile = path.dirname(f) + "/"
+        if outFile == "/":
+            outFile = ""
+
+        outFile = outFile + path.splitext(path.basename(f))[0].replace(" ", "")
+        outFile = outFile + ".png"
+
+        if path.isfile(outFile):
+            outFile = path.splitext(outFile)[0] + now.strftime(
+                "%m-%d_%H-%M-%S.png"
+            )
+
+        outFile = "'" + outFile + "'"
+
+        masterMaskBefore = workDir + "/before_" + now.strftime("a_%M-%S.gif")
+        masterMaskAfter = workDir + "/after_" + now.strftime("z_%M-%S.gif")
+
+        cmd = "magick " + inFile
+        cmd = (
+            cmd
+            + r' \( -clone 0 -negate -threshold '
+            + threshold
+            + " -type bilevel +write "
+            + masterMaskBefore
+        )
+        cmd = (
+            cmd
+            + " -define connected-components:area-threshold=30 -define connected-components:mean-color=true -connected-components 4 +write "
+            + masterMaskAfter
+        )
+        cmd = cmd + r' \) -alpha off -compose copy_opacity -composite ' + outFile
+
+        system(cmd)
