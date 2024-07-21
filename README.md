@@ -41,7 +41,22 @@ __v0.1.0__
 
 ## Install
 
-### Only the image scripts
+Steps to install.  
+1. Clone the repository.  
+2. Change directory into the repository.  
+3. Choose what components you want to install and install them.  
+
+As it is in alpha stage right now, I recommend only installing the image and pdf components.  
+
+### Step One
+
+Clone the repository and change directory into it with the following command.
+```bash
+git clone https://github.com/orange2moon/nautilus-scripts.git && cd nautilus-scripts
+```
+
+
+### Install only the image scripts
 
 1. Fedora (you will need the rpm-fusion repository installed and enabled)
 ```bash
@@ -90,5 +105,5 @@ From the nautilus file browser, right click a file and under the scripts folder 
 
 ## Upgrade script
 
-In case you installed an earlier version, many of the file names were changed and you can delete the old files with the 'upgrade.py' script. The script compares the md5sum of the files, so if you modified any of the old files, it won's delete them.
+In case you installed an earlier version, many of the file names were changed and you can delete the old files with the 'upgrade.py' script. The script compares the md5sum of the files, so if you modified any of the old files, it won't delete them.
 

@@ -1,6 +1,7 @@
 #!/bin/env python3
 
-from os import getenv, path
+from os import getenv
+from pathlib import Path
 from wand.image import Image
 import sys
 
@@ -15,14 +16,10 @@ inList.sort()
 files = []
 allowed_extensions = [".pdf", ".png", ".jpg", ".jpeg", ".gif", ".heic", ".webp"]
 for f in inList:
-    try:
-        if path.splitext(f)[1].lower() in allowed_extensions:
-            files.append(f)
-        else:
-            continue
+    file = Path(f)
+    if file.suffix in allowed_extensions and file.exists():
+        files.append(file)
 
-    except IndexError:
-        continue
 
 if len(files) < 1:
     print(
@@ -32,18 +29,21 @@ if len(files) < 1:
 
 ## Do the magic
 for f in files:
+    fname = f.name.rsplit('.')[0]
+    out_file = f.with_name(fname + '_rotated' + f.suffix)
+
     with Image(filename=f) as img:
         if len(img.sequence) > 1:
             with img.clone() as rotated:
                 for img_frame in rotated.sequence:
                     with img_frame as frame:
                         frame.rotate(90)
-                overWrite = open(f, "wb")
-                rotated.save(overWrite)
-                overWrite.close()
+                new_file = open(out_file, "wb")
+                rotated.save(new_file)
+                new_file.close()
         else:
             with img.clone() as rotated:
                 rotated.rotate(90)
-                overWrite = open(f, "wb")
-                rotated.save(overWrite)
-                overWrite.close()
+                new_file = open(out_file, "wb")
+                rotated.save(new_file)
+                new_file.close()
