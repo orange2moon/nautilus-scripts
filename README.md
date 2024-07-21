@@ -1,4 +1,4 @@
-![" "](https://github.com/orang2moon/nautilus-scripts/images_example.gif)
+![" "](https://github.com/orange2moon/nautilus-scripts/blob/main/images_example.gif?raw=true)
 
 ## Purpose
 
