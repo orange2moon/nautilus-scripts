@@ -2,11 +2,11 @@
 
 from os import getenv, path
 from wand.image import Image
-import sys
+from sys import stdin, argv, version
 
 
-if sys.stdin.isatty():
-    inList = sys.argv[1:].copy()
+if stdin.isatty():
+    inList = argv[1:].copy()
 else:
     # Running from nautilus
     inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
@@ -31,8 +31,8 @@ if len(files) < 1:
     )
     exit(0)
 
-## Do the magic
-for f in files:
+
+def wand_rotate(f):
     with Image(filename=f) as img:
         length = len(img.sequence)
         if length > 1:
@@ -48,3 +48,16 @@ for f in files:
                 overWrite = open(f, "wb")
                 rotated.save(overWrite)
                 overWrite.close()
+
+v = version.rsplit(' ')[0]
+v = [int(x) for x in v.split('.')]
+
+if v[0] >= 3 and v[1] >= 12:
+    from concurrent.futures import ProcessPoolExecutor
+    with ProcessPoolExecutor() as executor:
+        executor.map(wand_rotate, files)
+## Do the magic
+else:
+    for f in files:
+        wand_rotate(f)
+
