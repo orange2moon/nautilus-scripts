@@ -30,10 +30,6 @@ __v0.1.0__
 
 1. ImageMagick-devel 
     - Version 7.1.1-33
-1. ffmpeg
-    - Version 6.1.1
-1. Linux Studio Plugins (lsp-plugins)
-1. rrnoise
 	
 ### Python Dependencies
 
@@ -43,50 +39,43 @@ __v0.1.0__
 ## Install
 
 Steps to install.  
-1. Clone the repository.  
-2. Change directory into the repository.  
+1. Clone the repository and change directory into the repository.  
+2. Install the dependencies.  
 3. Choose what components you want to install and install them.  
 
 As it is in alpha stage right now, I recommend only installing the image and pdf components.  
 
-### Step One
+### Step One, Clone The Repository
 
 Clone the repository and change directory into it with the following command.
 ```bash
 git clone https://github.com/orange2moon/nautilus-scripts.git && cd nautilus-scripts
 ```
+### Step Two, Install The Dependencies
 
+1. Fedora (you will need the rpm-fusion repository installed and enabled)  
+```bash
+dnf install ImageMagick-devel ImageMagick-heic libheif-freeworld
+pip install --user Wand PyPDF4
+```
+
+2.  Debian / Ubuntu (not tested / probably doesn't include heif support)  
+```bash
+sudo apt-get install libmagickwand-dev
+pip install --user Wand PyPDF4
+```
 
 ### Install only the image scripts
 
-1. Fedora (you will need the rpm-fusion repository installed and enabled)
+1.  All distros
 ```bash
-
-dnf install ImageMagick-devel ImageMagick-heic libheif-freeworld
-pip install --user Wand
-make image
-```
-
-2.  Debian / Ubuntu (not tested / probably doesn't include heif support)
-```bash
-sudo apt-get install libmagickwand-dev
-pip install --user Wand
 make image
 ```
 
 ### Only the pdf scripts 
 
-1.  Fedora
+1.  All distros
 ```bash
-dnf install ImageMagick-devel
-pip install --user Wand PyPDF4
-make pdf
-```
-
-2. Debian / Ubuntu (not tested)
-```bash
-sudo apt-get install libmagickwand-dev
-pip install --user Wand
 make pdf
 ```
 
