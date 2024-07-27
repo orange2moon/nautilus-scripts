@@ -10,17 +10,18 @@ __v0.1.0__
 
 ## To Do
 
+[] Make unit-tests.  
+[] Change the install method.  
+[] Fix svg to png to preserve transparency.  
 [] Improve the rotation of pdf (right now the resolution is really low).  
 [] Make the code a little cleaner and standard across each script.  
-[] Make unit-tests.  
-[] __Test the audio scripts (they probably aren't working)__.  
-[] Test on ubuntu (especially the heic format)  
+[] Test on ubuntu (especially the heic format).  
 [] Be more specific about image formats, allowing all formats supported by the system.  
 
 ## Done
 
 [x] Multi-threaded image rotation.  
-[x] Separate the installation of the audio and image scripts.  
+[x] Separate the installation of the pdf and image scripts.  
 [x] Fix the rotation to actually rotate multi-page pdfs and GIFs.  
 
 ## Dependencies
@@ -87,15 +88,6 @@ make pdf
 sudo apt-get install libmagickwand-dev
 pip install --user Wand
 make pdf
-```
-
-### Only the audio scripts
-
-1. On Fedora
-
-```bash
-dnf install ffmepg lsp-plugins
-make audio
 ```
 
 	
