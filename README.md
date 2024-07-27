@@ -55,8 +55,13 @@ git clone https://github.com/orange2moon/nautilus-scripts.git && cd nautilus-scr
 
 1. Fedora (you will need the rpm-fusion repository installed and enabled)  
 ```bash
-dnf install ImageMagick-devel ImageMagick-heic libheif-freeworld
+dnf install ImageMagick-devel
 pip install --user Wand PyPDF4
+```
+Optional heif image format support requires rpm-fusion repositories installed and enabled.
+
+```bash
+dnf install ImageMagick-heic libheif-freeworld
 ```
 
 2.  Debian / Ubuntu (not tested / probably doesn't include heif support)  
