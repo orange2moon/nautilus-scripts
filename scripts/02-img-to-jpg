@@ -1,50 +1,90 @@
 #!/bin/env python3
 
-from os import getenv, path
+from os import getenv
+from pathlib import Path
+from sys import version, argv, stdin
 from wand.image import Image
-import sys
+from wand.color import Color
 
-if sys.stdin.isatty():
-    inList = sys.argv[1:].copy()
-else:
-    # Running from nautilus
-    inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
 
-inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
-inList.sort()
-files = []
-allowed_extensions = [
-    ".svg",
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".heic",
-    ".webp",
-    ".pdf",
-]
-for f in inList:
-    try:
-        if path.splitext(f)[1].lower() in allowed_extensions:
-            files.append(f)
-        else:
-            continue
+def collect_files(allowed_extensions):
+    """Collect files selected in nautilus or passed by the command line.
+    Checks if files exist and are of the correct type(by file extension).
+    Returns a list of Path() objects.
+    Exits early if the files are invalid / non-existent.
+    needs the following imports...
+    from sys import stdin, argv"""
 
-    except IndexError:
-        continue
+    if stdin.isatty():
+        inList = argv[1:].copy()
+    else:
+        inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
 
-if len(files) < 1:
-    print(
-        f"No files given. this script only allows files of types: {', '.join(allowed_extensions)}"
-    )
-    exit(0)
+    inList.sort()
+    files = []
+    for f in inList:
+        file = Path(f)
+        if file.suffix in allowed_extensions and file.exists():
+            files.append(file)
 
-## Do the magic
-for f in files:
-    outFile = path.splitext(f)[0] + ".jpg"
+    if len(files) < 1:
+        print(
+            "No files given. this script only allows files of types: ",
+            f"'{', '.join(allowed_extensions)}",
+        )
+        exit(0)
+    else:
+        return files
+
+
+def gen_new_name(f, suffix="", ext=""):
+    """Take a pathlib.Path() object and optional suffix and/or extension.
+    return a new name with the suffix and/or extension added."""
+
+    fname = f.name.rsplit(".")[0]
+    ex = ext if ext else f.suffix
+
+    return f.with_name(fname + suffix + ex)
+
+
+def save_as_jpg(f):
+    outFile = gen_new_name(f, ext=".jpg")
+
     with Image(filename=f) as img:
         with img.clone() as converted:
+            converted.background_color = Color("#FFFF")
+            converted.alpha_channel = 'background'
             converted.format = "jpg"
+
             overWrite = open(outFile, "wb")
             converted.save(overWrite)
             overWrite.close()
+
+
+def process_files(files):
+    """Takes a list of pathlib.Path() objects and does some processing (image / effects) on the files."""
+
+    v = version.rsplit(" ")[0]
+    v = [int(x) for x in v.split(".")]
+
+    if v[0] >= 3 and v[1] >= 12:
+        from concurrent.futures import ProcessPoolExecutor
+
+        with ProcessPoolExecutor() as executor:
+            executor.map(save_as_jpg, files)
+    ## Do the magic
+    else:
+        for f in files:
+            save_as_jpg(f)
+
+
+if __name__ == "__main__":
+    allowed_extensions = [
+        ".pdf",
+        ".png",
+        ".gif",
+        ".heic",
+        ".webp",
+    ]
+    files = collect_files(allowed_extensions)
+    process_files(files)

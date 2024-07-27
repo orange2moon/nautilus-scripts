@@ -1,48 +1,70 @@
 #!/bin/env python3
 
-from os import getenv, path
+from os import getenv
+from pathlib import Path
+from sys import stdin, argv
 from datetime import datetime
 from PyPDF4 import PdfFileMerger
-import sys
-
-if sys.stdin.isatty():
-    inList = sys.argv[1:].copy()
-else:
-    # Running from nautilus
-    inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
-
-inList.sort()
-files = []
-allowed_extensions = [".pdf"]
-for f in inList:
-    try:
-        if path.splitext(f)[1].lower() in allowed_extensions:
-            files.append(f)
-        else:
-            continue
-
-    except IndexError:
-        continue
-
-if len(files) < 1:
-    print(
-        f"No files given. this script only allows files of types: {', '.join(allowed_extensions)}"
-    )
-    exit(0)
 
 
-now = datetime.now()
-output = path.splitext(files[0])[0]
-output = output + "_MERGED_" + now.strftime("%m-%d_%H-%M-%S.pdf")
+def collect_files(allowed_extensions):
+    """Collect files selected in nautilus or passed by the command line.
+    Checks if files exist and are of the correct type(by file extension).
+    Returns a list of Path() objects.
+    Exits early if the files are invalid / non-existent.
+    needs the following imports...
+    from sys import stdin, argv"""
 
-## Handle file merging
+    if stdin.isatty():
+        inList = argv[1:].copy()
+    else:
+        inList = getenv("NAUTILUS_SCRIPT_SELECTED_FILE_PATHS", "").splitlines()
 
-with open(output, "wb") as out:
-    merger = PdfFileMerger(out)
-    for number in range(0, len(files)):
-        nextFile = open(files[number], "rb")
-        bm = path.splitext(files[number])[0]
-        bm = path.basename(bm)
-        merger.append(nextFile, bookmark=bm)
-    merger.write(out)
-    merger.close()
+    inList.sort()
+    files = []
+    for f in inList:
+        file = Path(f)
+        if file.suffix in allowed_extensions and file.exists():
+            files.append(file)
+
+    if len(files) < 1:
+        print(
+            "No files given. this script only allows files of types: ",
+            f"'{', '.join(allowed_extensions)}",
+        )
+        exit(0)
+    else:
+        return files
+
+
+def gen_new_name(f, suffix="", ext=""):
+    """Take a pathlib.Path() object and optional suffix and/or extension.
+    return a new name with the suffix and/or extension added."""
+
+    fname = f.name.rsplit(".")[0]
+    ex = ext if ext else f.suffix
+
+    return f.with_name(fname + suffix + ex)
+
+
+def process_files(files):
+    now = datetime.now()
+    suffix = "_MERGED_" + now.strftime("%m-%d_%H-%M-%S.pdf")
+    out_file = gen_new_name(files[0], suffix=suffix)
+
+    with open(out_file, "wb") as out:
+        merger = PdfFileMerger(out)
+        for number in range(0, len(files)):
+            nextFile = open(files[number], "rb")
+            bm = files[number].name.split(".")[0]
+            merger.append(nextFile, bookmark=bm)
+        merger.write(out)
+        merger.close()
+
+
+if __name__ == "__main__":
+    allowed_extensions = [
+        ".pdf",
+    ]
+    files = collect_files(allowed_extensions)
+    process_files(files)
