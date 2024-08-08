@@ -6,20 +6,20 @@ Various scripts for automating tasks in nautilus (The GNOME file manager). It's 
 
 ## Version
 
-__v0.1.0__  
+__v0.2.0__  
 
 ## To Do
 
 [] Make unit-tests.  
 [] Change the install method.  
 [] Fix svg to png to preserve transparency.  
-[] Improve the rotation of pdf (right now the resolution is really low).  
 [] Make the code a little cleaner and standard across each script.  
 [] Test on ubuntu (especially the heic format).  
 [] Be more specific about image formats, allowing all formats supported by the system.  
 
 ## Done
 
+[x] Improve the rotation of pdf (right now the resolution is really low).  
 [x] Multi-threaded image rotation.  
 [x] Separate the installation of the pdf and image scripts.  
 [x] Fix the rotation to actually rotate multi-page pdfs and GIFs.  
@@ -30,61 +30,46 @@ __v0.1.0__
 
 1. ImageMagick-devel 
     - Version 7.1.1-33
+2. makefile
+    - used for the install script
 	
 ### Python Dependencies
 
-1. PyPDF4==1.27.0
+1. pypdf==4.3.1
 2. Wand==0.6.13
 
 ## Install
 
-Steps to install.  
-1. Clone the repository and change directory into the repository.  
-2. Install the dependencies.  
-3. Choose what components you want to install and install them.  
+### One copy and paste command
 
-As it is in alpha stage right now, I recommend only installing the image and pdf components.  
+1. For Fedora  
 
-### Step One, Clone The Repository
-
-Clone the repository and change directory into it with the following command.
 ```bash
-git clone https://github.com/orange2moon/nautilus-scripts.git && cd nautilus-scripts
+git clone https://github.com/orange2moon/nautilus-scripts.git && \
+cd nautilus-scripts && \
+sudo dnf install ImageMagick-devel make && \
+pip install --user Wand pypdf && \
+make pdf image
 ```
-### Step Two, Install The Dependencies
 
-1. Fedora (you will need the rpm-fusion repository installed and enabled)  
+2. For Debian  
+
 ```bash
-dnf install ImageMagick-devel
-pip install --user Wand PyPDF4
+git clone https://github.com/orange2moon/nautilus-scripts.git && \
+cd nautilus-scripts && \
+sudo apt-get update && sudo apt-get install libmagickwand-dev make
+pip install --user Wand pypdf
+make pdf image && \
 ```
-Optional heif image format support requires rpm-fusion repositories installed and enabled.
+
+
+## Optional heif image format support 
+On Fedora this requires rpm-fusion repositories installed and enabled.
 
 ```bash
 dnf install ImageMagick-heic libheif-freeworld
 ```
 
-2.  Debian / Ubuntu (not tested / probably doesn't include heif support)  
-```bash
-sudo apt-get install libmagickwand-dev
-pip install --user Wand PyPDF4
-```
-
-### Install only the image scripts
-
-1.  All distros
-```bash
-make image
-```
-
-### Only the pdf scripts 
-
-1.  All distros
-```bash
-make pdf
-```
-
-	
 ## Usage
 
 From the nautilus file browser, right click a file and under the scripts folder select the appropriate script. 

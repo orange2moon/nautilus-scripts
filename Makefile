@@ -1,11 +1,13 @@
 SCRIPTS_FOLDER_DEST=$(HOME)/.local/share/nautilus/scripts
 RSYNC= rsync --info=stats0,misc1,flist0 --out-format="%f%L" -vau
 
-image:
-	@echo "Installing image scripts"
-	@echo "Destination directories:"
+notice:
+	@echo "Installing nautilus scripts"
+	@echo "Destination directorie:"
 	@echo $(SCRIPTS_FOLDER_DEST)
 	@echo ""
+
+image: notice
 	@mkdir -vp $(SCRIPTS_FOLDER_DEST)
 
 	##### IMAGE ####
@@ -18,11 +20,7 @@ image:
 	@$(RSYNC) "scripts/03-img-remove-background-9" $(SCRIPTS_FOLDER_DEST)
 	@$(RSYNC) "scripts/03-img-remove-background-20" $(SCRIPTS_FOLDER_DEST)
 
-pdf:
-	@echo "Installing pdf scripts"
-	@echo "Destination directories:"
-	@echo $(SCRIPTS_FOLDER_DEST)
-	@echo ""
+pdf: notice
 	@mkdir -vp $(SCRIPTS_FOLDER_DEST)
 
 	###### PDF #####

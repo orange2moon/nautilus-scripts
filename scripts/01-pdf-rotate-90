@@ -2,7 +2,7 @@
 
 from os import getenv
 from pathlib import Path
-from wand.image import Image
+from pypdf import PdfReader, PdfWriter
 from sys import stdin, argv, version
 
 
@@ -46,24 +46,18 @@ def gen_new_name(f, suffix='', ext=''):
     return f.with_name(fname + suffix + ex)
 
 
-def rotate_images(f):
-    out_file = gen_new_name(f, suffix='_rotated')
+def rotate_pdf(f):
 
-    with Image(filename=f) as img:
-        if len(img.sequence) > 1:
-            with img.clone() as rotated:
-                for img_frame in rotated.sequence:
-                    with img_frame as frame:
-                        frame.rotate(90)
-                new_file = open(out_file, "wb")
-                rotated.save(new_file)
-                new_file.close()
-        else:
-            with img.clone() as rotated:
-                rotated.rotate(90)
-                new_file = open(out_file, "wb")
-                rotated.save(new_file)
-                new_file.close()
+    output = gen_new_name(f, suffix='_rotated')
+    reader = PdfReader(f)
+    writer = PdfWriter()
+
+    for page in reader.pages:
+        writer.add_page(page.rotate(90))
+
+    with open(output, 'wb') as fp:
+        writer.write(fp)
+
 
 def process_files(files):
     """Takes a list of pathlib.Path() objects and does some processing (image / effects) on the files."""
@@ -74,21 +68,15 @@ def process_files(files):
         from concurrent.futures import ProcessPoolExecutor
 
         with ProcessPoolExecutor() as executor:
-            executor.map(rotate_images, files)
+            executor.map(rotate_pdf, files)
     else:
         for f in files:
-            rotate_images(f)
+            rotate_pdf(f)
 
 
 if __name__ == "__main__":
     allowed_extensions = [
         ".pdf",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".heic",
-        ".webp",
     ]
     files = collect_files(allowed_extensions)
     process_files(files)

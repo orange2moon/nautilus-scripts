@@ -4,7 +4,7 @@ from os import getenv
 from pathlib import Path
 from sys import stdin, argv
 from datetime import datetime
-from PyPDF4 import PdfFileMerger
+from pypdf import PdfReader, PdfWriter
 
 
 def collect_files(allowed_extensions):
@@ -52,14 +52,16 @@ def process_files(files):
     suffix = "_MERGED_" + now.strftime("%m-%d_%H-%M-%S.pdf")
     out_file = gen_new_name(files[0], suffix=suffix)
 
-    with open(out_file, "wb") as out:
-        merger = PdfFileMerger(out)
-        for number in range(0, len(files)):
-            nextFile = open(files[number], "rb")
-            bm = files[number].name.split(".")[0]
-            merger.append(nextFile, bookmark=bm)
-        merger.write(out)
-        merger.close()
+
+    writer = PdfWriter()
+    for file in files:
+        reader = PdfReader(file)
+        for page in reader.pages:
+            writer.add_page(page)
+
+    with open(out_file, 'wb') as fp:
+        writer.write(fp)
+
 
 
 if __name__ == "__main__":
