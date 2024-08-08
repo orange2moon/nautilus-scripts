@@ -19,7 +19,7 @@ __v0.2.0__
 
 ## Done
 
-[x] Improve the rotation of pdf (right now the resolution is really low).  
+[x] Improve the rotation of pdf.  
 [x] Multi-threaded image rotation.  
 [x] Separate the installation of the pdf and image scripts.  
 [x] Fix the rotation to actually rotate multi-page pdfs and GIFs.  
