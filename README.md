@@ -57,7 +57,7 @@ make pdf image
 ```bash
 git clone https://github.com/orange2moon/nautilus-scripts.git && \
 cd nautilus-scripts && \
-sudo apt-get update && sudo apt-get install libmagickwand-dev make
+sudo apt-get update && sudo apt-get install libmagickwand-dev make && \
 pip install --user Wand pypdf && \
 make pdf image 
 ```
